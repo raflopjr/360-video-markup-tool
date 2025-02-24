@@ -13,14 +13,27 @@
   
     // Radius of the sphere to project the video onto (May need to update for VR).
     const radius = 30;
+
+    const DEFAULT_FOV = 75;
+    const MAX_FOV = 100;
+    const MIN_FOV = 10;
   
     let video;
     let videoDuration = 0;
     let videoCurrentTime = 0;
     let videoPaused = true;
+
+    let zoomLevelAmount = translateFOVToZoomLevel(DEFAULT_FOV);
   
     let notes = [];
-  
+
+    function translateFOVToZoomLevel(fov) {
+        return (MAX_FOV - fov) / (MAX_FOV - MIN_FOV);
+    }
+    
+    function translateZoomLevelToFOV(zoomLevel) {
+        return MAX_FOV - zoomLevel * (MAX_FOV - MIN_FOV);
+    }
     function playVideo() {
       video.play();
       videoPaused = video.paused;
@@ -33,6 +46,14 @@
   
     function updateVideoTime(time) {
       video.currentTime = time;
+    }
+
+    function setZoomAmount(newZoomLevel) {
+        let newFOV = translateZoomLevelToFOV(newZoomLevel);
+        // Clamp the field of view to prevent zooming in too far or too close.
+        camera.fov = THREE.MathUtils.clamp(newFOV, MIN_FOV, MAX_FOV);
+        zoomLevelAmount = translateFOVToZoomLevel(DEFAULT_FOV);
+        camera.updateProjectionMatrix();
     }
   
     function createText(textContent, hWorldText, hWorldContainer, hPxTxt, fgcolor, bgcolor) {
@@ -124,7 +145,7 @@
     onMount(() => {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(
-        75,
+        DEFAULT_FOV,
         window.innerWidth / window.innerHeight,
         1,
         100,
@@ -220,21 +241,37 @@
       // Handle event listener for custom zooming.
       function handleZoom(e) {
         // Clamp the field of view to prevent zooming in too far or too close.
-        camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY / 10, 10, 100);
+        camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY / 10, MIN_FOV, MAX_FOV);
+        zoomLevelAmount = translateFOVToZoomLevel(DEFAULT_FOV);
         camera.updateProjectionMatrix();
       }
       renderer.domElement.addEventListener("wheel", handleZoom);
     });
   </script>
+<style>
+    .cursor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  border: 2px solid black;
+}
+</style>
   
   <div bind:this={container}></div>
   <Overlay
     {videoDuration}
     {videoCurrentTime}
     {videoPaused}
+    {zoomLevelAmount}
+    {setZoomAmount}
     {playVideo}
     {pauseVideo}
     {updateVideoTime}
     {addNote}
   />
+  <div class="cursor"></div>
   
