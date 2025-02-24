@@ -169,10 +169,10 @@
     </div>
 
     {#if videoPaused}
-      <button on:click={playVideo} class="play-pause-button">⏵</button>
+      <button on:click={playVideo} class="play-pause-button">&#x23F5;</button>
     
     {:else}
-      <button on:click={pauseVideo} class="play-pause-button">⏸</button>
+      <button on:click={pauseVideo} class="play-pause-button">&#x23F8;</button>
     {/if}
 
     <div class="time-display">
