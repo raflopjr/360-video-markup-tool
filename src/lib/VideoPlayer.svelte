@@ -52,7 +52,7 @@
         let newFOV = translateZoomLevelToFOV(newZoomLevel);
         // Clamp the field of view to prevent zooming in too far or too close.
         camera.fov = THREE.MathUtils.clamp(newFOV, MIN_FOV, MAX_FOV);
-        zoomLevelAmount = translateFOVToZoomLevel(DEFAULT_FOV);
+        zoomLevelAmount = translateFOVToZoomLevel(camera.fov);
         camera.updateProjectionMatrix();
     }
   

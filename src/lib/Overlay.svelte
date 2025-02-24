@@ -10,6 +10,8 @@
   export let updateVideoTime;
   export let addNote;
 
+  const ZOOM_STEP = 0.1;
+
   function handleAddNote() {
     pauseVideo();
 
@@ -22,8 +24,15 @@
 
   function handleZoomSlider(event) {
     let desiredZoomLevel = event.target.value;
-    console.log(desiredZoomLevel);
     setZoomAmount(desiredZoomLevel);
+  }
+
+  function handleZoomIn() {
+    setZoomAmount(zoomLevelAmount + ZOOM_STEP);
+  }
+
+  function handleZoomOut() {
+    setZoomAmount(zoomLevelAmount - ZOOM_STEP);
   }
 
 </script>
@@ -130,6 +139,15 @@
     vertical-align: bottom;
   }
 
+  .zoom-button {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 1em;
+    padding: 0px;
+    cursor: pointer;
+  }
+
   .zoom-ui-container {
     padding-left: 1em;
   }
@@ -138,7 +156,7 @@
 <div class="overlay top-left">
   <button on:click={handleAddNote} class="add-note-button">Add Note</button>
   <div class="zoom-ui-container">
-    <div>🔍+</div>
+    <button on:click={handleZoomIn} class="zoom-button">🔍+</button>
     <input class="zoom-level-slider" on:change={handleZoomSlider}
       type="range"
       id="zoomLevel"
@@ -147,7 +165,7 @@
       min="0"
       max="1"
       step="any" />
-      <div>🔍-</div>
+      <button on:click={handleZoomOut} class="zoom-button">🔍-</button>
   </div>
 
 </div>
