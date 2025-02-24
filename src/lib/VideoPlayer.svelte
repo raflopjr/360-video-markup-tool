@@ -242,7 +242,7 @@
       function handleZoom(e) {
         // Clamp the field of view to prevent zooming in too far or too close.
         camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY / 10, MIN_FOV, MAX_FOV);
-        zoomLevelAmount = translateFOVToZoomLevel(DEFAULT_FOV);
+        zoomLevelAmount = translateFOVToZoomLevel(camera.fov);
         camera.updateProjectionMatrix();
       }
       renderer.domElement.addEventListener("wheel", handleZoom);
