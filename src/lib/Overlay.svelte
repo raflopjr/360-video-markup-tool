@@ -1,5 +1,4 @@
 <script>
-  export let text = "Overlay Text";
   export let videoDuration;
   export let videoCurrentTime;
   export let videoPaused;
@@ -28,10 +27,10 @@
     z-index: 10;
   }
 
-  .top-right {
+  /* .top-right {
     top: 10px;
     right: 10px;
-  }
+  } */
 
   /* .top-left {
     top: 10px;
