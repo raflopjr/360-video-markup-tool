@@ -126,7 +126,7 @@
     writing-mode: vertical-rl;
     direction: rtl;
     appearance: slider-vertical;
-    width: 16px;
+    /* width: 16px; */
     vertical-align: bottom;
   }
 
