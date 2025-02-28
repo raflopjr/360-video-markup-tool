@@ -3,12 +3,16 @@
   export let videoCurrentTime;
   export let videoPaused;
   export let zoomLevelAmount;
+  export let notes;
 
+  export let snapToNote;
   export let setZoomAmount;
   export let playVideo;
   export let pauseVideo;
   export let updateVideoTime;
   export let addNote;
+  export let addSnap;
+  export let removeNote;
 
   const ZOOM_STEP = 0.1;
 
@@ -18,7 +22,17 @@
     // Spawn text box for user to input note.
     const note = prompt("Enter note:");
     if (note) {
-      addNote(videoCurrentTime, note);
+      notes = addNote(videoCurrentTime, note);
+    }
+  }
+
+  function handleAddSnap() {
+    pauseVideo();
+
+    // Spawn text box for user to input note.
+    const confirmed = confirm("This will add a keyframe where the camera will pan to this position. Click Ok to confirm.");
+    if (confirmed) {
+      notes = addSnap(videoCurrentTime);
     }
   }
 
@@ -35,6 +49,16 @@
     setZoomAmount(zoomLevelAmount - ZOOM_STEP);
   }
 
+  function handleKeyframeClick(event) {
+    console.log('Handle keyframe click: ',  event.target.getAttribute("data-id"));
+    snapToNote(notes[event.target.getAttribute("data-id")]);
+  }
+
+  function handleKeyframeRemove(event) {
+    const noteId = event.target.getAttribute("data-id");
+    notes = removeNote(noteId);
+  }
+
 </script>
 
 <style>
@@ -45,46 +69,16 @@
     z-index: 10;
   }
 
-  /* .top-right {
-    top: 10px;
-    right: 10px;
-  } */
-
-  /* .top-left {
-    top: 10px;
-    left: 10px;
-  }
-  
-  .bottom-left {
-    bottom: 10px;
-    left: 10px;
-  }
-  .bottom-right {
-    bottom: 10px;
-    right: 10px;
-  }
-  .center {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .north {
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  .east {
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  .west {
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-  } */
-
   .add-note-button {
+    margin: 10px;
+    font-size: x-large;
+    background-color: brown;
+    color: white;
+  }
+
+  .add-snap-button {
+    background-color: cadetblue;
+    color: white;
     margin: 10px;
     font-size: x-large;
   }
@@ -111,7 +105,7 @@
 
   .progress-bar {
     height: 100%;
-    background-color: green;
+    background-color: gray;
   }
 
   .play-pause-button {
@@ -151,10 +145,38 @@
   .zoom-ui-container {
     padding-left: 1em;
   }
+
+  .note-keyframe {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    transform: translate(-25%, -25%);
+  }
+
+  .note-keyframe:hover {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+  }
+
+  .note-keyframe:hover .note-keyframe-remove {
+    display: block;
+  }
+
+  /* Default state of remove button while not hovered is hidden. */
+  .note-keyframe-remove {
+    display: none;
+    color: red;
+    width: 25px;
+    height: 25px;
+    font-size: 1.5em;
+    transform: translate(-5%, -150%);
+  }
 </style>
 
 <div class="overlay top-left">
   <button on:click={handleAddNote} class="add-note-button">Add Note</button>
+  <button on:click={handleAddSnap} class="add-snap-button">Add Snap-To-Position</button>
   <div class="zoom-ui-container">
     <button on:click={handleZoomIn} class="zoom-button">🔍+</button>
     <input class="zoom-level-slider" on:change={handleZoomSlider}
@@ -183,6 +205,16 @@
       // Update the video current time here
       updateVideoTime(newTime);
     }}>
+      {#each notes as note, index}
+          <div class="note-keyframe" title="Jump to this keyframe."
+            style={`position: absolute; left: ${note.time / videoDuration * 100}%; background-color: ${note.keyframeColor}`}
+            on:click={handleKeyframeClick}
+            data-id={index}
+            ><div class="note-keyframe-remove" on:click={handleKeyframeRemove} data-id={index} title="Remove the keyframe.">
+            &#x2716;
+            </div>
+        </div>
+      {/each}
       <div class="progress-bar" style={`width:${videoCurrentTime / videoDuration * 100}%`} />
     </div>
 
