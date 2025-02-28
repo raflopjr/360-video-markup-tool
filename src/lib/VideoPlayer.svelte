@@ -17,7 +17,9 @@
     const DEFAULT_FOV = 75;
     const MAX_FOV = 100;
     const MIN_FOV = 10;
-  
+
+    const DEFAULT_NOTE_DURATION = 1000;
+    const DEFAULT_NOTE_COLOR = 0xcccccc;
     let video;
     let videoDuration = 0;
     let videoCurrentTime = 0;
@@ -54,6 +56,15 @@
         camera.fov = THREE.MathUtils.clamp(newFOV, MIN_FOV, MAX_FOV);
         zoomLevelAmount = translateFOVToZoomLevel(camera.fov);
         camera.updateProjectionMatrix();
+    }
+
+    function snapToNote(note) {
+        camera.lookAt(note.mesh.position);
+    }
+
+    function removeNote(noteId) {
+        notes = notes.filter((_, index) => index != noteId);
+        return notes;
     }
   
     function createText(textContent, hWorldText, hWorldContainer, hPxTxt, fgcolor, bgcolor) {
@@ -121,7 +132,7 @@
         5,
         500,
         0x000000,
-        0xcccccc,
+        DEFAULT_NOTE_COLOR,
       ); // text #1, Hello, world
       scene.add(textContainerMesh);
   
@@ -139,7 +150,22 @@
   
       scene.add(textContainerMesh);
   
-      notes.push({ time, noteContent, mesh: textContainerMesh });
+      notes.push({ time, noteContent, mesh: textContainerMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: "note", keyframeColor: 'brown' });
+
+      return notes;
+    }
+
+    function addSnap(time) {
+        // Create new vector to shoot in the direcion of the viewer.
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction);
+  
+        // Scale position within the viewing sphere, then set the position of the text container.
+        direction.multiplyScalar(radius * 0.5);
+        let fakeMesh = { position: new THREE.Vector3(direction.x, direction.y, direction.z) };
+        notes.push({ time, noteContent: null, mesh: fakeMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: 'snap', keyframeColor: "cadetblue" });
+
+        return notes;
     }
   
     onMount(() => {
@@ -263,6 +289,7 @@
   
   <div bind:this={container}></div>
   <Overlay
+    {notes}
     {videoDuration}
     {videoCurrentTime}
     {videoPaused}
@@ -272,6 +299,9 @@
     {pauseVideo}
     {updateVideoTime}
     {addNote}
+    {addSnap}
+    {snapToNote}
+    {removeNote}
   />
   <div class="cursor"></div>
   
