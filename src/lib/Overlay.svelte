@@ -36,6 +36,14 @@
     }
   }
 
+  function handleClear() {
+    console.debug('clear all notes, restart video and pause.')
+  }
+
+  function handleLoadDemo() {
+    console.debug('reload default keyframe array.');
+  }
+
   function handleZoomSlider(event) {
     let desiredZoomLevel = event.target.value;
     setZoomAmount(desiredZoomLevel);
@@ -69,9 +77,12 @@
     z-index: 10;
   }
 
-  .add-note-button {
+  .base-button {
     margin: 10px;
     font-size: x-large;
+  }
+
+  .add-note-button {
     background-color: brown;
     color: white;
   }
@@ -79,8 +90,6 @@
   .add-snap-button {
     background-color: cadetblue;
     color: white;
-    margin: 10px;
-    font-size: x-large;
   }
 
   .south {
@@ -91,6 +100,13 @@
     display: flex;
     justify-content: center;
 
+  }
+
+   .bottom {
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
   }
 
   .bottom-ui-container {
@@ -175,8 +191,8 @@
 </style>
 
 <div class="overlay top-left">
-  <button on:click={handleAddNote} class="add-note-button">Add Note</button>
-  <button on:click={handleAddSnap} class="add-snap-button">Add Snap-To-Position</button>
+  <button on:click={handleAddNote} class="add-note-button base-button">Add Note</button>
+  <button on:click={handleAddSnap} class="add-snap-button base-button">Add Snap-To-Position</button>
   <div class="zoom-ui-container">
     <button on:click={handleZoomIn} class="zoom-button">🔍+</button>
     <input class="zoom-level-slider" on:change={handleZoomSlider}
@@ -230,4 +246,9 @@
         { String(Math.floor(videoCurrentTime / 60)).padStart(2, '0') }:{ String(Math.floor(videoCurrentTime % 60)).padStart(2, '0') } / { String(Math.floor(videoDuration / 60)).padStart(2, '0') }:{ String(Math.floor(videoDuration % 60)).padStart(2, '0') }</span>
     </div>
   </div>
+</div>
+
+<div class="overlay bottom">
+    <button class="base-button" style="margin-left: 10px;" on:click={handleClear}>Clear All</button>
+    <button class="base-button" style="margin-right: 10px;" on:click={handleLoadDemo}>Load Demo</button>
 </div>
