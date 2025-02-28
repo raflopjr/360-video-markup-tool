@@ -8,6 +8,7 @@
   
     import Overlay from "./Overlay.svelte";
     import { handleInput } from "./VrControllerHandler";
+    import DefaultKeyframes from "./DefaultKeyframes";
   
     let container;
     let scene, camera, renderer, controls;
@@ -24,10 +25,8 @@
     const DEFAULT_NOTE_DURATION = 1000;
     const DEFAULT_NOTE_COLOR = 0xcccccc;
 
-    const DEMO_KEYFRAMES = [];
-
     // All of these are used for state tracking in the overlay.
-    let notes = isDemo ? DEMO_KEYFRAMES : [];
+    let notes = isDemo ? getDefaultKeyframes() : [];
     let video;
     let videoDuration = 0;
     let videoCurrentTime = 0;
@@ -59,7 +58,7 @@
   
       scene.add(textContainerMesh);
   
-      notes.push({ time, noteContent, mesh: textContainerMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: "note", keyframeColor: 'brown' });
+      notes.push({ time, noteContent, mesh: textContainerMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: "note", keyframeColor: 'brown', position: textContainerMesh.position });
 
       return notes;
     }
@@ -72,9 +71,45 @@
         // Scale position within the viewing sphere, then set the position of the text container.
         direction.multiplyScalar(radius * 0.5);
         let fakeMesh = { position: new THREE.Vector3(direction.x, direction.y, direction.z) };
-        notes.push({ time, noteContent: null, mesh: fakeMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: 'snap', keyframeColor: "cadetblue" });
+        notes.push({ time, noteContent: null, mesh: fakeMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: 'snap', keyframeColor: "cadetblue", position: fakeMesh.position });
 
         return notes;
+    }
+
+    function clearState() {
+        // TODO: Remove once we have default data saved.
+        console.debug(notes);
+
+        // Remove each note from the list and from the scene.
+        notes.forEach((note, index) => {
+            removeNote(index);
+        });
+
+        // Reset video state.
+        video.pause();
+        video.currentTime = 0;
+        videoDuration = 0;
+        videoCurrentTime = 0;
+        videoPaused = true;
+
+    }
+
+    function getDefaultKeyframes() {
+        let data = [];
+        DefaultKeyframes.forEach(keyframes => {
+            // move the camera to look at the position.
+            // if keyframe is snap
+            // recreate the snap
+            // else
+            // recreate mesh and save to array.
+        });
+
+        return data;
+    }
+
+    function loadDemo() {
+        clearState();
+        notes = getDefaultKeyframes();
     }
 
     function playVideo() {
@@ -87,8 +122,16 @@
       videoPaused = video.paused;
     }
 
-    function removeNote(noteId) {
-        notes = notes.filter((_, index) => index != noteId);
+    function removeNote(noteIndex) {
+        let targetNote = notes[noteIndex];
+        // Remove notes from the scene.
+        if(targetNote.type === "note") {
+            targetNote.mesh.geometry.dispose();
+            targetNote.mesh.material.dispose();
+            scene.remove( targetNote.mesh );
+        }
+        // Remove from our array and return updated list of keyframes.
+        notes = notes.filter((_, index) => index != noteIndex);
         return notes;
     }
 
@@ -301,14 +344,16 @@
     {videoCurrentTime}
     {videoPaused}
     {zoomLevelAmount}
-    {setZoomAmount}
-    {playVideo}
-    {pauseVideo}
-    {updateVideoTime}
     {addNote}
     {addSnap}
-    {snapToNote}
+    {clearState}
+    {loadDemo}
+    {pauseVideo}
+    {playVideo}
+    {setZoomAmount}
     {removeNote}
+    {snapToNote}
+    {updateVideoTime}
   />
   <!-- Overlayed on the screen to let the user know where the camera is pointing. -->
   <div class="cursor"></div>

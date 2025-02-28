@@ -5,14 +5,16 @@
   export let zoomLevelAmount;
   export let notes;
 
-  export let snapToNote;
-  export let setZoomAmount;
-  export let playVideo;
-  export let pauseVideo;
-  export let updateVideoTime;
   export let addNote;
   export let addSnap;
+  export let clearState;
+  export let loadDemo;
+  export let pauseVideo;
+  export let playVideo;
   export let removeNote;
+  export let setZoomAmount;
+  export let snapToNote;
+  export let updateVideoTime;
 
   const ZOOM_STEP = 0.1;
 
@@ -38,10 +40,12 @@
 
   function handleClear() {
     console.debug('clear all notes, restart video and pause.')
+    clearState();
   }
 
   function handleLoadDemo() {
     console.debug('reload default keyframe array.');
+    loadDemo();
   }
 
   function handleZoomSlider(event) {
