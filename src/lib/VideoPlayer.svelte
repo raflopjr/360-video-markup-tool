@@ -1,5 +1,6 @@
 <script>
     export let src = "https://s.bepro11.com/vr-video-sample.mp4";
+    export let isDemo;
     import { onMount } from "svelte";
     import * as THREE from "three";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -14,28 +15,68 @@
     // Radius of the sphere to project the video onto (May need to update for VR).
     const radius = 30;
 
+    // Initial, min and max zoom for the camera perspective.
     const DEFAULT_FOV = 75;
     const MAX_FOV = 100;
     const MIN_FOV = 10;
 
+    // TODO: Notes currently do not disappear after the duration.
     const DEFAULT_NOTE_DURATION = 1000;
     const DEFAULT_NOTE_COLOR = 0xcccccc;
+
+    const DEMO_KEYFRAMES = [];
+
+    // All of these are used for state tracking in the overlay.
+    let notes = isDemo ? DEMO_KEYFRAMES : [];
     let video;
     let videoDuration = 0;
     let videoCurrentTime = 0;
     let videoPaused = true;
-
     let zoomLevelAmount = translateFOVToZoomLevel(DEFAULT_FOV);
-  
-    let notes = [];
 
-    function translateFOVToZoomLevel(fov) {
-        return (MAX_FOV - fov) / (MAX_FOV - MIN_FOV);
+    function addNote(time, noteContent) {
+      let textContainerMesh = createText(
+        noteContent,
+        1,
+        5,
+        500,
+        0x000000,
+        DEFAULT_NOTE_COLOR,
+      ); // text #1, Hello, world
+      scene.add(textContainerMesh);
+  
+      // Create new vector to shoot in the direcion of the viewer.
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction);
+  
+      // Scale position within the viewing sphere, then set the position of the text container.
+      direction.multiplyScalar(radius * 0.5);
+      textContainerMesh.position.set(direction.x, direction.y, direction.z);
+  
+      // We want to make sure the viewer is seeing the plane head on for readability.
+      textContainerMesh.lookAt(0, 0, 0);
+      textContainerMesh.doubleSided = true;
+  
+      scene.add(textContainerMesh);
+  
+      notes.push({ time, noteContent, mesh: textContainerMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: "note", keyframeColor: 'brown' });
+
+      return notes;
     }
-    
-    function translateZoomLevelToFOV(zoomLevel) {
-        return MAX_FOV - zoomLevel * (MAX_FOV - MIN_FOV);
+
+    function addSnap(time) {
+        // Create new vector to shoot in the direcion of the viewer.
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction);
+  
+        // Scale position within the viewing sphere, then set the position of the text container.
+        direction.multiplyScalar(radius * 0.5);
+        let fakeMesh = { position: new THREE.Vector3(direction.x, direction.y, direction.z) };
+        notes.push({ time, noteContent: null, mesh: fakeMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: 'snap', keyframeColor: "cadetblue" });
+
+        return notes;
     }
+
     function playVideo() {
       video.play();
       videoPaused = video.paused;
@@ -45,9 +86,10 @@
       video.pause();
       videoPaused = video.paused;
     }
-  
-    function updateVideoTime(time) {
-      video.currentTime = time;
+
+    function removeNote(noteId) {
+        notes = notes.filter((_, index) => index != noteId);
+        return notes;
     }
 
     function setZoomAmount(newZoomLevel) {
@@ -62,9 +104,16 @@
         camera.lookAt(note.mesh.position);
     }
 
-    function removeNote(noteId) {
-        notes = notes.filter((_, index) => index != noteId);
-        return notes;
+    function translateFOVToZoomLevel(fov) {
+        return (MAX_FOV - fov) / (MAX_FOV - MIN_FOV);
+    }
+    
+    function translateZoomLevelToFOV(zoomLevel) {
+        return MAX_FOV - zoomLevel * (MAX_FOV - MIN_FOV);
+    }
+
+    function updateVideoTime(time) {
+      video.currentTime = time;
     }
   
     function createText(textContent, hWorldText, hWorldContainer, hPxTxt, fgcolor, bgcolor) {
@@ -124,50 +173,7 @@
       // console.log(wWorldTxt, hWorldText, wWorldAll, hWorldContainer);
       return mesh;
     }
-  
-    function addNote(time, noteContent) {
-      let textContainerMesh = createText(
-        noteContent,
-        1,
-        5,
-        500,
-        0x000000,
-        DEFAULT_NOTE_COLOR,
-      ); // text #1, Hello, world
-      scene.add(textContainerMesh);
-  
-      // Create new vector to shoot in the direcion of the viewer.
-      const direction = new THREE.Vector3();
-      camera.getWorldDirection(direction);
-  
-      // Scale position within the viewing sphere, then set the position of the text container.
-      direction.multiplyScalar(radius * 0.5);
-      textContainerMesh.position.set(direction.x, direction.y, direction.z);
-  
-      // We want to make sure the viewer is seeing the plane head on for readability.
-      textContainerMesh.lookAt(0, 0, 0);
-      textContainerMesh.doubleSided = true;
-  
-      scene.add(textContainerMesh);
-  
-      notes.push({ time, noteContent, mesh: textContainerMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: "note", keyframeColor: 'brown' });
-
-      return notes;
-    }
-
-    function addSnap(time) {
-        // Create new vector to shoot in the direcion of the viewer.
-        const direction = new THREE.Vector3();
-        camera.getWorldDirection(direction);
-  
-        // Scale position within the viewing sphere, then set the position of the text container.
-        direction.multiplyScalar(radius * 0.5);
-        let fakeMesh = { position: new THREE.Vector3(direction.x, direction.y, direction.z) };
-        notes.push({ time, noteContent: null, mesh: fakeMesh, duration: DEFAULT_NOTE_DURATION, color: DEFAULT_NOTE_COLOR, type: 'snap', keyframeColor: "cadetblue" });
-
-        return notes;
-    }
-  
+    
     onMount(() => {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(
@@ -286,8 +292,9 @@
   border: 2px solid black;
 }
 </style>
-  
+  <!-- On Mount this holds the three.JS scene -->
   <div bind:this={container}></div>
+  <!-- Used for web interface displayed over the three.JS scene. -->
   <Overlay
     {notes}
     {videoDuration}
@@ -303,5 +310,6 @@
     {snapToNote}
     {removeNote}
   />
+  <!-- Overlayed on the screen to let the user know where the camera is pointing. -->
   <div class="cursor"></div>
   
