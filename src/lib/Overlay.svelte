@@ -22,7 +22,7 @@
     pauseVideo();
 
     // Spawn text box for user to input note.
-    const note = prompt("Enter note:");
+    const note = prompt("This will add a note at the current cursor position.\n\nNote Text:");
     if (note) {
       notes = addNote(videoCurrentTime, note);
     }
@@ -32,19 +32,17 @@
     pauseVideo();
 
     // Spawn text box for user to input note.
-    const confirmed = confirm("This will add a keyframe where the camera will pan to this position. Click Ok to confirm.");
+    const confirmed = confirm("This will add a keyframe to pan to the current cursor position.\n\nClick Ok to confirm.");
     if (confirmed) {
       notes = addSnap(videoCurrentTime);
     }
   }
 
   function handleClear() {
-    console.debug('clear all notes, restart video and pause.')
     clearState();
   }
 
   function handleLoadDemo() {
-    console.debug('reload default keyframe array.');
     loadDemo();
   }
 
@@ -62,7 +60,6 @@
   }
 
   function handleKeyframeClick(event) {
-    console.log('Handle keyframe click: ',  event.target.getAttribute("data-id"));
     snapToNote(notes[event.target.getAttribute("data-id")]);
   }
 
